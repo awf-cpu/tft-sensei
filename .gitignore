@@ -1,0 +1,27 @@
+# Segredos — NUNCA versionar
+.env
+*.key
+
+# Capturas / dados gerados
+captures/
+data/sessions/
+*.png
+!docs/**/*.png
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+
+# Modelos locais baixados (Fase 3+)
+models/
+*.gguf
+*.safetensors
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

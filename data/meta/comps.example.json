@@ -1,0 +1,28 @@
+{
+  "_comentario": "Base de meta de EXEMPLO. Copie para comps.json e atualize a cada patch. Este arquivo alimenta o RAG — é aqui que o conhecimento volátil vive, fora dos pesos do modelo.",
+  "patch": "EXEMPLO (substitua pelo set/patch atual)",
+  "comps": [
+    {
+      "nome": "Reroll Custo 1 (exemplo)",
+      "nivel": "S",
+      "unidades_chave": ["Unidade A", "Unidade B", "Unidade C"],
+      "itens_prioritarios": ["Item X", "Item Y"],
+      "condicao": "Forte quando você perde streak cedo e fica com pouca vida.",
+      "notas": "Rolar no nível 6 em busca de 3 estrelas das custo 1."
+    },
+    {
+      "nome": "Fast 8 (exemplo)",
+      "nivel": "A",
+      "unidades_chave": ["Carry Custo 5", "Tank Custo 4"],
+      "itens_prioritarios": ["Item de AP", "Item de defesa"],
+      "condicao": "Forte quando você está com vida alta e bom ouro.",
+      "notas": "Economizar para o nível 8, segurar a vida com reforços."
+    }
+  ],
+  "prioridade_itens_componentes": {
+    "_comentario": "Dica geral de pra onde mandar cada componente neste patch.",
+    "Espada": "ofensivo (AD)",
+    "Tomo": "ofensivo (AP)",
+    "Cota": "defensivo (armadura)"
+  }
+}
