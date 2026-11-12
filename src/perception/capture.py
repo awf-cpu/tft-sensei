@@ -37,8 +37,15 @@ def capture_screen(monitor: int = 1, save: bool = True) -> Image.Image:
     return img
 
 
-def image_to_png_bytes(img: Image.Image) -> bytes:
-    """Serializa uma imagem PIL em PNG (para enviar ao LLM)."""
+def image_to_png_bytes(img: Image.Image, max_width: int = 1280) -> bytes:
+    """Serializa uma imagem PIL em PNG (para enviar ao LLM).
+
+    Reduz a largura para no máx. `max_width` px: menos dados -> menos
+    latência e custo, sem perder a legibilidade da tela do TFT.
+    """
+    if img.width > max_width:
+        ratio = max_width / img.width
+        img = img.resize((max_width, int(img.height * ratio)))
     buf = io.BytesIO()
     img.save(buf, format="PNG")
     return buf.getvalue()

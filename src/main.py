@@ -35,6 +35,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--pergunta", default=None, help="pergunta específica sobre a tela"
     )
+    parser.add_argument(
+        "--explica",
+        action="store_true",
+        help="modo aula detalhada (mais lento); padrão é resposta curta ao vivo",
+    )
     args = parser.parse_args(argv)
 
     # 1. PERCEPÇÃO
@@ -49,7 +54,9 @@ def main(argv: list[str] | None = None) -> int:
     # 2. CÉREBRO
     print("🧠 Analisando com a IA...", file=sys.stderr)
     try:
-        resposta = analyze(png, pergunta=args.pergunta)
+        resposta = analyze(
+            png, pergunta=args.pergunta, mode="deep" if args.explica else "live"
+        )
     except RuntimeError as e:
         print(f"\n❌ {e}", file=sys.stderr)
         return 1

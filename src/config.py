@@ -12,6 +12,9 @@ load_dotenv()
 @dataclass
 class Config:
     llm_provider: str = os.getenv("LLM_PROVIDER", "anthropic").lower()
+    # Modo AO VIVO: modelo rápido e barato (prioriza latência).
+    live_model: str = os.getenv("LLM_LIVE_MODEL", "claude-haiku-5-5")
+    # Modo EXPLICA (sob demanda): modelo mais capaz p/ a aula detalhada.
     llm_model: str = os.getenv("LLM_MODEL", "claude-sonnet-5-5")
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
     anthropic_api_key: str = os.getenv("ANTHROPIC_API_KEY", "")
