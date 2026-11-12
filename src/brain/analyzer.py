@@ -86,7 +86,12 @@ def _analyze_openai(system: str, user_text: str, b64: str) -> str:
 def _analyze_anthropic(system: str, user_text: str, b64: str) -> str:
     import anthropic
 
-    client = anthropic.Anthropic(api_key=config.anthropic_api_key)
+    # Sem chave -> usa o login da CLI (`ant auth login`), caminho "Seu próprio
+    # computador". Com chave no .env -> usa a chave.
+    if config.anthropic_api_key:
+        client = anthropic.Anthropic(api_key=config.anthropic_api_key)
+    else:
+        client = anthropic.Anthropic()
     resp = client.messages.create(
         model=config.llm_model,
         max_tokens=700,

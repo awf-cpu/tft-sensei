@@ -11,8 +11,8 @@ load_dotenv()
 
 @dataclass
 class Config:
-    llm_provider: str = os.getenv("LLM_PROVIDER", "openai").lower()
-    llm_model: str = os.getenv("LLM_MODEL", "gpt-4o")
+    llm_provider: str = os.getenv("LLM_PROVIDER", "anthropic").lower()
+    llm_model: str = os.getenv("LLM_MODEL", "claude-sonnet-5-5")
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
     anthropic_api_key: str = os.getenv("ANTHROPIC_API_KEY", "")
     riot_api_key: str = os.getenv("RIOT_API_KEY", "")
@@ -20,17 +20,15 @@ class Config:
     lang: str = os.getenv("COACH_LANG", "pt-BR")
 
     def validate(self) -> None:
-        """Garante que a chave do provedor escolhido está presente."""
+        """Garante que há credencial para o provedor escolhido."""
         if self.llm_provider == "openai" and not self.openai_api_key:
             raise RuntimeError(
                 "OPENAI_API_KEY não definida. Edite o arquivo .env "
                 "(copie de .env.example)."
             )
-        if self.llm_provider == "anthropic" and not self.anthropic_api_key:
-            raise RuntimeError(
-                "ANTHROPIC_API_KEY não definida. Edite o arquivo .env "
-                "(copie de .env.example)."
-            )
+        # Anthropic: a chave é OPCIONAL. Se ANTHROPIC_API_KEY estiver vazia,
+        # o SDK usa o login da CLI (`ant auth login`) automaticamente — é o
+        # caminho "Seu próprio computador", sem chave pra gerenciar.
         if self.llm_provider not in ("openai", "anthropic"):
             raise RuntimeError(
                 f"LLM_PROVIDER inválido: {self.llm_provider!r}. "
