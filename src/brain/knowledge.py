@@ -13,7 +13,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-META_DIR = Path("data/meta")
+# Resolved from the file location so it works from any working directory.
+META_DIR = Path(__file__).resolve().parents[2] / "data" / "meta"
 
 
 def load_meta() -> dict:
