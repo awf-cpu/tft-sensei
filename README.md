@@ -1,110 +1,73 @@
-# TFT Coach 🧠🎙️
+# tft-sensei
 
-Um assistente de IA, por voz e em tempo real, que atua como **professor ao vivo** de
-Teamfight Tactics (TFT): ele "enxerga" o seu tabuleiro, analisa o cenário e te orienta
-nas escolhas — rolls, itens, augments, posicionamento — explicando o *porquê* de cada
-recomendação.
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
+![Status: MVP](https://img.shields.io/badge/status-MVP-orange)
 
-> Estilo Blitz/Mobalytics, mas com coaching por IA e interação por voz.
+An **AI coach for Teamfight Tactics (TFT)** that "looks" at your game screen with a multimodal LLM and explains what to do next (rolls, items, augments, positioning) and *why*. It has a fast **live mode** (one or two short sentences) and a detailed **teaching mode**. Voice interaction (speech-to-text and text-to-speech) is designed and stubbed, and is on the roadmap.
 
----
+> Portfolio project for multimodal LLM pipelines: screen perception, prompt design for latency-sensitive answers, and a patch-proof knowledge layer. Not affiliated with Riot Games.
 
-## Filosofia de arquitetura
+## The business problem it explores
 
-O sistema é dividido em 4 camadas independentes. A decisão mais importante do projeto:
-**conhecimento que muda a cada patch NÃO fica treinado no modelo — fica numa base
-atualizável (RAG).** Assim nada fica desatualizado e você não precisa retreinar nada.
+Domain knowledge that changes often (here, the game meta every ~2 weeks) ages badly when baked into model weights. The design choice that matters: **volatile knowledge lives in an updatable knowledge base (RAG-style), not in the model**, so nothing goes stale and nothing needs retraining. The same reasoning applies to price lists, regulations, internal policies and product catalogs.
 
-```
-PERCEPÇÃO  →  capta o estado do jogo
-  ├── Visão (screenshot + modelo multimodal)  → lê tabuleiro, loja, augments, bench
-  └── Live/Overwolf (opcional)                → vida, ouro e estágio exatos
-
-CÉREBRO    →  decide e ensina
-  ├── LLM com visão (nuvem no MVP)            → raciocínio + persona de "professor"
-  └── RAG (base de meta atualizável)          → comps/itens/augments do set atual
-
-VOZ        →  conversa em tempo real
-  ├── STT (Whisper, local)                    → você fala a pergunta
-  └── TTS                                      → ele responde falando
-
-MEMÓRIA    →  grava interações → vira dataset próprio → destilação local no futuro
-```
-
-### Por que não treinar um modelo local desde o início?
-- O meta do TFT muda a cada ~2 semanas; conhecimento nos pesos envelhece quase na hora.
-- RAG é mais barato, sempre atual e não exige GPU de treino.
-- O caminho certo é: **nuvem + RAG agora → coletar seus dados usando → destilar p/ local depois.**
-
----
-
-## Roadmap por fases
-
-- [x] **Fase 1 — Cérebro de texto:** screenshot → IA analisa → responde em texto *(este MVP)*
-- [ ] **Fase 2 — Voz:** fala a pergunta (STT) + ouve a resposta (TTS)
-- [ ] **Fase 3 — Tempo real:** captura automática nos gatilhos + overlay na tela
-- [ ] **Fase 4 — RAG de meta robusto:** base de comps/itens atualizada por patch
-
----
-
-## Como rodar a Fase 1
-
-Pré-requisitos: Python 3.10+ e uma API key de um modelo **com visão** (multimodal).
+## Try it
 
 ```bash
-cd tft-coach
-python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-cp .env.example .env               # edite e coloque sua API key
+pip install -r requirements.txt && cp .env.example .env   # add your LLM API key
+python -m src.main --image path/to/screenshot.png          # analyze a screenshot
+python -m src.main --capture --pergunta "should I force a cost-1 reroll?"   # capture the screen and ask
+python -m src.main --capture --explica                     # teaching mode (slower, detailed)
 ```
 
-Analisar um print que você já tirou:
+The LLM provider is configurable (`LLM_PROVIDER=anthropic|openai`, `LLM_MODEL`) in `.env`.
 
-```bash
-python -m src.main --image caminho/para/print.png
-```
-
-Capturar a tela atual e analisar (precisa estar com o TFT visível):
-
-```bash
-python -m src.main --capture
-```
-
-Fazer uma pergunta específica sobre a tela:
-
-```bash
-python -m src.main --capture --pergunta "vale a pena forçar reroll de custo 1?"
-```
-
----
-
-## Estrutura
+## Architecture
 
 ```
-src/
-  main.py              # ponto de entrada: orquestra captura → análise → resposta
-  config.py            # carrega .env e configurações
-  perception/
-    capture.py         # captura de tela (seguro: só lê pixels, não toca no jogo)
-  brain/
-    analyzer.py        # envia imagem + contexto ao LLM multimodal
-    knowledge.py       # RAG: carrega a base de meta (comps/itens) do set atual
-  voice/
-    stt.py             # STUB Fase 2 — reconhecimento de fala (Whisper)
-    tts.py             # STUB Fase 2 — síntese de voz
-data/
-  meta/
-    comps.example.json # exemplo da base de conhecimento (você atualiza por patch)
+PERCEPTION  ->  reads the game state
+  - screen capture (pixels only) + multimodal LLM: board, shop, augments, bench
+  - optional live-data source for exact HP, gold and stage
+
+BRAIN       ->  decides and teaches
+  - vision LLM with a coach persona (live mode: short and fast, deep mode: 3-part lesson)
+  - updatable meta knowledge base (comps / items / augments for the current set)
+
+VOICE       ->  planned: local Whisper STT + TTS (stubs in src/voice/)
+
+MEMORY      ->  planned: log interactions into your own dataset, distill to a local model later
 ```
 
----
+Why not train a local model first? The meta changes too fast for weights, retrieval is cheaper and always current, and the sensible path is **cloud model plus knowledge base now, collect your own usage data, distill to local later**.
 
-## ⚠️ Compliance (importante)
+## Roadmap
 
-- **Só captura de tela** (lê pixels) e APIs oficiais. **Nunca** leitura de memória do jogo
-  — isso viola os termos da Riot e dá ban.
-- A captura de tela é *anti-cheat safe* porque não injeta nada no processo do jogo.
-- Para a Riot API oficial, respeite os rate limits e nunca versione sua API key.
+- [x] Phase 1: screenshot to analysis to text answer (this MVP), including live and teaching modes
+- [ ] Phase 2: voice (STT with Whisper, TTS)
+- [ ] Phase 3: real-time triggers and on-screen overlay
+- [ ] Phase 4: robust per-patch meta knowledge base
 
-Este projeto não é afiliado à Riot Games.
+## Compliance
+
+Screen capture only (reads pixels) and official APIs. It never reads game memory, which would violate the game's terms. Respect API rate limits and never commit API keys.
+
+## How this becomes a solution for your company
+
+The pattern here (perceive a screen or document with a multimodal model, answer with a persona, keep changing knowledge outside the model) is the same one used for assistants that read forms, dashboards, scanned documents or on-screen workflows and guide a user step by step. If you need something like that, see **Work with me** below.
+
+## Work with me
+
+I am André Feix, founder of **Pindorama Tecnologia** (Florianópolis, Brazil). We build custom AI systems for companies and law firms: WhatsApp agents with compliance guardrails (LGPD, bar-association rules), RAG over documents, document and deadline automation, LLM routing with cost control, and local AI with data kept in Brazil.
+
+- LinkedIn: https://www.linkedin.com/in/andrefeix
+- Email: andrefeix777@gmail.com
+- More: https://github.com/awf-cpu
+
+## Em português (resumo)
+
+Assistente de IA para Teamfight Tactics que analisa o print da tela com um modelo multimodal e orienta a jogada explicando o porquê. Modo ao vivo (resposta curta) e modo aula (`--explica`). Voz (Whisper + TTS) está planejada, ainda como stub. O conhecimento que muda a cada patch fica numa base atualizável, não nos pesos do modelo. Para rodar: `pip install -r requirements.txt`, copie `.env.example` para `.env` e use `python -m src.main --image print.png`.
+
+## License
+
+MIT © 2026 awf-cpu
